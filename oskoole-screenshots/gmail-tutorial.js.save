@@ -1,0 +1,130 @@
+
+
+nano gmail-tutorial.js
+ls
+```
+
+You should see:
+```
+test.js
+gmail-tutorial.js
+google.png
+package.json
+node_modules/
+node gmail-tutorial.js
+node gmail-tutorial.js
+cd ~/Desktop/oskoole-screenshots
+ls
+```
+
+nano gmail-tutorial.js
+const { chromium } = require('playwright');
+
+async function createGmailTutorial() {
+  const browser = await chromium.launch({ headless: false });
+  const page = await browser.newPage();
+  
+  console.log('📸 Step 1: Going to Gmail signup page...');
+  await page.goto('https://accounts.google.com/signup');
+  await page.waitForLoadState('networkidle');
+  await page.screenshot({ path: 'gmail-step-1.png' });
+  console.log('✅ Step 1 saved!');
+  
+  console.log('📸 Step 2: Highlighting first name field...');
+  await page.evaluate(() => {
+    const input = 
+document.querySelector('input[name="firstName"]');
+    if (input) {
+      input.style.border = '5px solid #FF6B6B';
+      input.style.boxShadow = '0 0 20px rgba(255, 107, 107, 0.5)';
+    }
+  });
+  await page.screenshot({ path: 'gmail-step-2.png' });
+  console.log('✅ Step 2 saved!');
+  
+  console.log('📸 Step 3: Highlighting last name field...');
+  await page.evaluate(() => {
+    const input = 
+document.querySelector('input[name="lastName"]');
+    if (input) {
+      input.style.border = '5px solid #4CAF50';
+      input.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.5)';
+    }
+  });
+  await page.screenshot({ path: 'gmail-step-3.png' });
+  console.log('✅ Step 3 saved!');
+  
+  await browser.close();
+  console.log('\n✨ Tutorial complete! You now have 3 
+screenshots.');
+}
+
+createGmailTutorial();
+
+ls *.png
+open
+cd ~/Desktop/oskoole-screenshots
+pwd
+npm install openai
+nano dalle-test.js
+const OpenAI = require('openai');
+const fs = require('fs');
+const https = require('https');
+
+const openai = new OpenAI({
+  apiKey: 'YOUR_API_KEY_HERE'  // Replace with your actual API key
+});
+
+async function generateTutorialImage(prompt) {
+  console.log('🎨 Generating image with DALL-E...');
+  console.log('Prompt:', prompt);
+  
+  try {
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard"  // or "hd" for better quality (costs 
+more)
+    });
+    
+    const imageUrl = response.data[0].url;
+    console.log('✅ Image generated!');
+    console.log('URL:', imageUrl);
+    
+    // Download the image
+    const filename = 'dalle-tutorial-step.png';
+    await downloadImage(imageUrl, filename);
+    console.log(`✅ Image saved as ${filename}`);
+    
+    return imageUrl;
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+  }
+}
+
+// Helper function to download image
+function downloadImage(url, filename) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (response) => {
+      const fileStream = fs.createWriteStream(filename);
+      response.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close();
+        resolve();
+      });
+    }).on('error', reject);
+  });
+}
+
+// Test it with a Gmail tutorial prompt
+generateTutorialImage(
+  "A clean, professional screenshot of Gmail signup page showing 
+input fields for first name and last name, with a red arrow 
+pointing to the first name field, modern web interface design, 
+high quality UI"
+);
+nano dalle-test.js
+
