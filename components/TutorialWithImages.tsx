@@ -120,10 +120,10 @@ export default function TutorialWithImages({ query }: TutorialWithImagesProps) {
       <div className="flex items-center justify-center h-full p-8">
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 border-4 border-purple-200 rounded-full" />
-            <div className="absolute inset-0 border-4 border-purple-600 rounded-full border-t-transparent animate-spin" />
+            <div className="absolute inset-0 border-4 border-light rounded-full" />
+            <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
           </div>
-          <p className="text-gray-700 font-semibold">Capturing Screenshots...</p>
+          <p className="text-dark font-body font-medium">Capturing Screenshots...</p>
         </div>
       </div>
     );
@@ -132,12 +132,12 @@ export default function TutorialWithImages({ query }: TutorialWithImagesProps) {
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
+        <div className="bg-light border-2 border-primary rounded-lg p-6">
           <div className="flex items-start">
             <span className="text-2xl mr-3">⚠️</span>
             <div>
-              <p className="text-yellow-800 font-semibold">{error}</p>
-              <p className="text-sm text-yellow-700 mt-2">Supported: Gmail, Instagram, Google</p>
+              <p className="text-dark font-body font-medium">{error}</p>
+              <p className="text-sm text-dark/70 font-body mt-2">Supported: Gmail, Instagram, Google</p>
             </div>
           </div>
         </div>
@@ -148,9 +148,9 @@ export default function TutorialWithImages({ query }: TutorialWithImagesProps) {
   if (steps.length === 0) {
     return (
       <div className="flex items-center justify-center h-full p-8">
-        <div className="text-center text-gray-400">
+        <div className="text-center text-dark/60">
           <div className="text-6xl mb-4">📱</div>
-          <p className="text-lg">Ask a tech question to see screenshots</p>
+          <p className="text-lg font-body">Ask a tech question to see screenshots</p>
         </div>
       </div>
     );
@@ -158,39 +158,43 @@ export default function TutorialWithImages({ query }: TutorialWithImagesProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+      <div className="bg-secondary/10 border-2 border-secondary rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <span className="text-green-600 text-xl mr-2">✓</span>
+            <span className="text-secondary text-xl mr-2">✓</span>
             <div>
-              <p className="text-green-800 font-semibold">Real Playwright Screenshots</p>
-              <p className="text-sm text-green-700">With voice-over narration</p>
+              <p className="text-dark font-heading font-bold">Real Playwright Screenshots</p>
+              <p className="text-sm text-dark/70 font-body">With AI voice-over narration</p>
             </div>
           </div>
           {generatingAudio && (
-            <div className="flex items-center text-blue-600">
+            <div className="flex items-center text-secondary">
               <div className="animate-spin mr-2">🎤</div>
-              <span className="text-sm font-medium">Generating voice...</span>
+              <span className="text-sm font-medium font-body">Generating voice...</span>
             </div>
           )}
         </div>
       </div>
 
       {steps.map((step) => (
-        <div key={step.stepNumber} className="border-2 border-gray-200 rounded-lg bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 border-b-2 border-gray-200">
+        <div key={step.stepNumber} className="border-2 border-primary rounded-lg bg-cream shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-gradient-to-r from-light to-cream p-4 border-b-2 border-primary">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">
+                <div className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 font-body">
                   {step.stepNumber}
                 </div>
-                <h3 className="font-bold text-lg">Step {step.stepNumber}</h3>
+                <h3 className="font-bold text-lg text-dark font-heading">Step {step.stepNumber}</h3>
               </div>
               
               {step.audioUrl && (
                 <button
                   onClick={() => currentPlayingStep === step.stepNumber ? pauseAudio(step.stepNumber) : playAudio(step.stepNumber)}
-                  className={`px-4 py-2 rounded-lg font-semibold ${currentPlayingStep === step.stepNumber ? 'bg-red-500' : 'bg-blue-500'} text-white`}
+                  className={`px-4 py-2 rounded-lg font-body font-medium shadow-md hover:shadow-lg transition-all ${
+                    currentPlayingStep === step.stepNumber 
+                      ? 'bg-dark hover:bg-dark/90 text-white' 
+                      : 'bg-secondary hover:bg-[#3D9A91] text-white'
+                  }`}
                 >
                   {currentPlayingStep === step.stepNumber ? '⏸️ Pause' : '▶️ Play'}
                 </button>
@@ -200,8 +204,12 @@ export default function TutorialWithImages({ query }: TutorialWithImagesProps) {
           </div>
           
           <div className="p-4">
-            <p className="text-gray-700 mb-4">{step.description}</p>
-            <img src={step.image} alt={`Step ${step.stepNumber}`} className="w-full rounded-lg border-2 border-gray-200" />
+            <p className="text-dark mb-4 font-body">{step.description}</p>
+            <img 
+              src={step.image} 
+              alt={`Step ${step.stepNumber}`} 
+              className="w-full rounded-lg border-2 border-light shadow-md" 
+            />
           </div>
         </div>
       ))}

@@ -1,135 +1,156 @@
 'use client';
 
-import { useChat } from 'ai/react';
 import { useState } from 'react';
-import TutorialWithImages from '@/components/TutorialWithImages';
+import TutorialWithImages from './TutorialWithImages';
 
 export default function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat'
-  });
-  
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Array<{role: string, content: string}>>([]);
+  const [loading, setLoading] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
-  const [showTutorial, setShowTutorial] = useState(false);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    
-    setCurrentQuery(input);
-    setShowTutorial(true);
-    handleSubmit(e);
-  };
+  async function handleSend() {
+    if (!input.trim() || loading) return;
+
+    const userMessage = input.trim();
+    setInput('');
+    setLoading(true);
+    setCurrentQuery(userMessage);
+
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'You are a helpful tech support assistant. Provide clear, step-by-step instructions.' },
+            { role: 'user', content: userMessage }
+          ]
+        }),
+      });
+
+      if (!response.ok) throw new Error('API request failed');
+
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            oskoole.ai
-          </h1>
-          <p className="text-gray-600">Learn Tech Skills with AI-Powered Education</p>
-        </div>
-
-        {/* UNIFIED INTERFACE */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 p-4">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <span className="mr-2">🎓</span>
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+      <div className="bg-secondary rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header - Changed to secondary color (#4DB5AA) */}
+        <div className="bg-secondary p-4 sm:p-6">
+          <div className="flex items-center justify-center">
+            <span className="text-2xl sm:text-3xl mr-2 sm:mr-3">💬</span>
+            <h2 className="text-lg sm:text-2xl font-bold text-white text-center">
               Ask a Tech Question & Get Step-by-Step Tutorial
             </h2>
           </div>
+        </div>
 
-          <div className="h-[calc(100vh-300px)] overflow-y-auto p-6 space-y-6">
-            {messages.length === 0 && !showTutorial && (
-              <div className="text-center text-gray-400 mt-8">
-                <div className="mb-6">
-                  <span className="text-6xl">📱</span>
-                </div>
-                <p className="mb-4 text-lg font-semibold text-gray-700">
-                  Ask a tech question to see real screenshots
-                </p>
-                <p className="text-sm mb-4">Screenshots are generated using Playwright</p>
-                <div className="space-y-2 text-sm bg-gray-50 p-6 rounded-lg max-w-md mx-auto">
-                  <p className="text-gray-600">• "How to create a Gmail account?"</p>
-                  <p className="text-gray-600">• "How to post on Instagram?"</p>
-                  <p className="text-gray-600">• "How to search on Google?"</p>
-                </div>
+        {/* Messages Area */}
+        <div className="bg-cream p-3 sm:p-6 min-h-[300px] sm:min-h-[500px] max-h-[500px] sm:max-h-[700px] overflow-y-auto">
+          {messages.length === 0 ? (
+            <div className="text-center py-8 sm:py-12">
+              <div className="text-5xl sm:text-6xl mb-4">📱</div>
+              <p className="text-dark text-base sm:text-lg font-medium mb-4 px-4">
+                Ask a tech question to see real screenshots
+              </p>
+              <p className="text-dark/70 text-xs sm:text-sm px-4">
+                Screenshots are generated using Playwright
+              </p>
+              <div className="mt-6 sm:mt-8 text-left max-w-md mx-auto bg-light/50 p-3 sm:p-4 rounded-lg mx-4">
+                <p className="text-dark font-medium mb-2 text-sm sm:text-base">Try asking:</p>
+                <ul className="text-dark/80 text-xs sm:text-sm space-y-1">
+                  <li>• "How to create a Gmail account?"</li>
+                  <li>• "How to post on Instagram?"</li>
+                  <li>• "How to search on Google?"</li>
+                </ul>
               </div>
-            )}
-            
-            {/* Messages with integrated tutorials */}
-            {messages.map((message, index) => (
-              <div key={message.id} className="space-y-4">
-                {/* User Question */}
-                {message.role === 'user' && (
-                  <div className="bg-gradient-to-r from-blue-100 to-blue-50 p-5 rounded-xl ml-auto max-w-[85%] border-l-4 border-blue-500">
-                    <p className="text-xs font-bold mb-2 text-blue-700 uppercase tracking-wide">
-                      👤 Your Question
-                    </p>
-                    <p className="text-gray-800 text-lg font-medium">{message.content}</p>
-                  </div>
-                )}
-
-                {/* AI Response */}
-                {message.role === 'assistant' && (
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-5 rounded-xl border-l-4 border-purple-500">
-                      <p className="text-xs font-bold mb-3 text-purple-700 uppercase tracking-wide">
-                        🤖 AI Assistant
-                      </p>
-                      <p className="whitespace-pre-wrap text-gray-800 leading-relaxed">{message.content}</p>
-                    </div>
-
-                    {/* Tutorial with Screenshots - appears right after AI response */}
-                    {index === messages.length - 1 && showTutorial && (
-                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-purple-200">
-                        <div className="flex items-center mb-4 pb-3 border-b border-purple-200">
-                          <span className="text-2xl mr-3">📸</span>
-                          <h3 className="text-xl font-bold text-purple-700">
-                            Visual Step-by-Step Tutorial
-                          </h3>
-                        </div>
-                        <TutorialWithImages query={currentQuery} />
+            </div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[90%] sm:max-w-[80%] rounded-xl sm:rounded-2xl p-3 sm:p-4 ${
+                    msg.role === 'user' 
+                      ? 'bg-secondary text-white' 
+                      : 'bg-light text-dark border-2 border-primary/20'
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      <span className="text-lg sm:text-xl">
+                        {msg.role === 'user' ? '👤' : '🤖'}
+                      </span>
+                      <div>
+                        <p className="text-xs font-medium mb-1 opacity-70">
+                          {msg.role === 'user' ? 'YOUR QUESTION' : 'AI ASSISTANT'}
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm sm:text-base">{msg.content}</p>
                       </div>
-                    )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-            
-            {isLoading && (
-              <div className="bg-gray-100 p-5 rounded-xl max-w-[85%] border-l-4 border-gray-400">
-                <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-light border-2 border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-primary"></div>
+                      <span className="text-dark text-sm sm:text-base">Thinking...</span>
+                    </div>
                   </div>
-                  <span className="ml-2 text-gray-600 font-medium">Generating tutorial with screenshots...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Visual Tutorial Section */}
+        {currentQuery && (
+          <div className="border-t-2 sm:border-t-4 border-primary bg-cream">
+            <div className="p-3 sm:p-6">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl">📸</span>
+                  <h3 className="text-lg sm:text-xl font-bold text-dark">Visual Step-by-Step Tutorial</h3>
                 </div>
               </div>
-            )}
+              <TutorialWithImages query={currentQuery} />
+            </div>
           </div>
+        )}
 
-          {/* Input Form */}
-          <div className="border-t-2 border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-blue-50">
-            <form onSubmit={onSubmit} className="flex gap-3">
-              <input
-                value={input}
-                onChange={handleInputChange}
-                placeholder="How to create a Gmail account?"
-                className="flex-1 p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                {isLoading ? '⏳' : '🚀 Send'}
-              </button>
-            </form>
+        {/* Input Area */}
+        <div className="p-3 sm:p-6 bg-light rounded-b-xl sm:rounded-b-2xl">
+          <div className="flex gap-2 sm:gap-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="How to create a Gmail account?"
+              className="flex-1 px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl border-2 border-primary focus:outline-none focus:ring-2 focus:ring-secondary bg-cream text-dark placeholder-dark/50 text-sm sm:text-base"
+              disabled={loading}
+            />
+            <button
+              onClick={handleSend}
+              disabled={loading || !input.trim()}
+              style={{ backgroundColor: '#4DB5AA' }}
+              className="px-4 py-2 sm:px-6 sm:py-3 hover:opacity-90 text-white rounded-lg sm:rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base whitespace-nowrap"
+            >
+              Send
+            </button>
           </div>
         </div>
       </div>
