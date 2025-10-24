@@ -33,14 +33,56 @@ export default function ChatInterface() {
 
       if (!response.ok) throw new Error('API request failed');
 
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantMessage = '';
+
+      // Add empty assistant message that we'll update
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('0:')) {
+              try {
+                const jsonStr = line.substring(2);
+                const data = JSON.parse(jsonStr);
+                if (data && typeof data === 'string') {
+                  assistantMessage += data;
+                  // Update the last message with accumulated content
+                  setMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = {
+                      role: 'assistant',
+                      content: assistantMessage
+                    };
+                    return newMessages;
+                  });
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
-      }]);
+      setMessages(prev => {
+        // Remove the empty assistant message if it exists
+        const filtered = prev.filter(m => m.content !== '');
+        return [...filtered, { 
+          role: 'assistant', 
+          content: 'Sorry, I encountered an error. Please try again.' 
+        }];
+      });
     } finally {
       setLoading(false);
     }
@@ -92,7 +134,7 @@ export default function ChatInterface() {
                       <span className="text-lg sm:text-xl">
                         {msg.role === 'user' ? '👤' : '🤖'}
                       </span>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs font-medium mb-1 opacity-70">
                           {msg.role === 'user' ? 'YOUR QUESTION' : 'AI ASSISTANT'}
                         </p>
