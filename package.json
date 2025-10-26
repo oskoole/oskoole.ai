@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.39",
+    "@vercel/blob": "^2.0.0",
     "ai": "^3.4.33",
     "cors": "^2.8.5",
     "express": "^5.1.0",
